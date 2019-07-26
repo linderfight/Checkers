@@ -1,5 +1,7 @@
 public enum State{
     EMPTY,
-    WHITE,
-    RED,
+    WHITE_PIECE,
+    BLACK_PIECE,
+    WHITE_KING,
+    BLACK_KING,
 }
