@@ -20,42 +20,80 @@ public class Square extends JButton{
 
     boolean canMoveTo(Square destination){
         Square origin = this;
-        Square middleSquare = Board.getMiddleSquare(this, destination);
         boolean canMoveTo = false;
 
-        if (Math.abs(origin.getRow() - destination.getRow()) == 1) {
-            if (destination.state == State.EMPTY && destination.colour == Colour.WHITE){
-                if (origin.state == State.WHITE_PIECE){
-                    if ((origin.getRow() - destination.getRow() == 1) && Math.abs(origin.getColumn() - destination.getColumn()) == 1) {
-                        canMoveTo = true;
-                    }
-                } else if (origin.state == State.BLACK_PIECE){
-                    if ((destination.getRow() - origin.getRow() == 1) && Math.abs(origin.getColumn() - destination.getColumn()) == 1) {
-                        canMoveTo = true;
-                    }
+        if (origin.state == State.WHITE_KING || origin.state == State.BLACK_KING){
+            canMoveTo = isKingMoveLegal(origin, destination);
+        } else {
+            if (Math.abs(origin.getRow() - destination.getRow()) == 1) {
+                canMoveTo = canMakeSingleMove(origin, destination);
+            } else if (Math.abs(origin.getRow() - destination.getRow()) == 2) {
+                canMoveTo = canJumpTo(origin, destination);
+            }
+        }
+        return canMoveTo;
+    }
+
+    private boolean canMakeSingleMove(Square origin, Square destination){
+        boolean canMakeSingleMove = false;
+
+        if (destination.state == State.EMPTY && destination.colour == Colour.WHITE) {
+            if (origin.state == State.WHITE_PIECE) {
+                if ((origin.getRow() - destination.getRow() == 1) && Math.abs(origin.getColumn() - destination.getColumn()) == 1) {
+                    canMakeSingleMove = true;
+                }
+            } else if (origin.state == State.BLACK_PIECE) {
+                if ((destination.getRow() - origin.getRow() == 1) && Math.abs(origin.getColumn() - destination.getColumn()) == 1) {
+                    canMakeSingleMove = true;
                 }
             }
+        }
+        return  canMakeSingleMove;
+    }
 
-        } else if (Math.abs(origin.getRow() - destination.getRow()) == 2){
-            if (!(origin.state == middleSquare.state) && !(middleSquare.state == State.EMPTY)){
-                if (origin.state == State.WHITE_PIECE){
+    private boolean canJumpTo(Square origin, Square destination){
+
+        boolean canJumpTo = false;
+        Square middleSquare;
+
+        try {
+            middleSquare = Board.getMiddleSquare(this, destination);
+        } catch (Exception e){
+            return  false;
+        }
+
+        if (destination.state == State.EMPTY && destination.colour == Colour.WHITE) {
+            if (!(origin.state == middleSquare.state) && !(middleSquare.state == State.EMPTY)) {
+                if (origin.state == State.WHITE_PIECE) {
                     if ((origin.getRow() - destination.getRow() == 2) && Math.abs(origin.getColumn() - destination.getColumn()) == 2) {
-                        if (destination.state == State.EMPTY && destination.colour == Colour.WHITE) {
-                            canMoveTo = true;
-                        }
+                        canJumpTo = true;
                     }
-                } else if (origin.state == State.BLACK_PIECE){
+                } else if (origin.state == State.BLACK_PIECE) {
                     if ((destination.getRow() - origin.getRow() == 2) && Math.abs(origin.getColumn() - destination.getColumn()) == 2) {
-                        if (destination.state == State.EMPTY && destination.colour == Colour.WHITE) {
-                            canMoveTo = true;
-                        }
+                        canJumpTo = true;
                     }
                 }
             }
         }
 
-        return canMoveTo;
+        return canJumpTo;
+    }
 
+    private boolean isKingMoveLegal(Square origin, Square destination){
+        boolean kingMoveLegal = false;
+
+        // How is the King moving?
+
+
+
+
+
+
+
+
+
+
+        return kingMoveLegal;
     }
 
     void moveTo(Square destination){
@@ -106,11 +144,11 @@ public class Square extends JButton{
         }
     }
 
-    public int getColumn(){
+    int getColumn(){
         return COLUMN;
     }
 
-    public int getRow(){
+    int getRow(){
         return ROW;
     }
 
@@ -118,7 +156,7 @@ public class Square extends JButton{
         return state;
     }
 
-    public Colour getColour(){
+    Colour getColour(){
         return colour;
     }
 
@@ -126,7 +164,7 @@ public class Square extends JButton{
         this.state = state;
     }
 
-    public void setColour(Colour colour){
+    void setColour(Colour colour){
         this.colour = colour;
     }
 
