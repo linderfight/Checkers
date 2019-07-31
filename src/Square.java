@@ -21,49 +21,30 @@ public class Square extends JButton{
     boolean canMoveTo(Square destination){
         Square origin = this;
         boolean canMoveTo = false;
-
-        if (origin.state == State.WHITE_KING || origin.state == State.BLACK_KING){
-            canMoveTo = isKingMoveLegal(origin, destination);
-        } else {
-            if (Math.abs(origin.getRow() - destination.getRow()) == 1) {
-                canMoveTo = canMakeSingleMove(origin, destination);
-            } else if (Math.abs(origin.getRow() - destination.getRow()) == 2) {
-                canMoveTo = canJumpTo(origin, destination);
+        if (!(destination == null)) {
+            if (origin.state == State.WHITE_KING || origin.state == State.BLACK_KING) {
+                canMoveTo = this.canMakeSingleMoveKing(destination);
+            } else {
+                canMoveTo = this.canMove(destination);
             }
         }
         return canMoveTo;
     }
 
-    private boolean canMakeSingleMove(Square origin, Square destination){
-        boolean canMakeSingleMove = false;
-
-        if (destination.state == State.EMPTY && destination.colour == Colour.WHITE) {
-            if (origin.state == State.WHITE_PIECE) {
-                if ((origin.getRow() - destination.getRow() == 1) && Math.abs(origin.getColumn() - destination.getColumn()) == 1) {
-                    canMakeSingleMove = true;
-                }
-            } else if (origin.state == State.BLACK_PIECE) {
-                if ((destination.getRow() - origin.getRow() == 1) && Math.abs(origin.getColumn() - destination.getColumn()) == 1) {
-                    canMakeSingleMove = true;
-                }
-            }
-        }
-        return  canMakeSingleMove;
-    }
-
-    private boolean canJumpTo(Square origin, Square destination){
+    boolean canJumpTo(Square destination){
 
         boolean canJumpTo = false;
         Square middleSquare;
+        Square origin = this;
 
         try {
             middleSquare = Board.getMiddleSquare(this, destination);
-        } catch (Exception e){
-            return  false;
+        } catch (Exception e) {
+            return false;
         }
 
         if (destination.state == State.EMPTY && destination.colour == Colour.WHITE) {
-            if (!(origin.state == middleSquare.state) && !(middleSquare.state == State.EMPTY)) {
+            if (middleIsOpposite(origin.state, middleSquare.state) && !(middleSquare.state == State.EMPTY)) {
                 if (origin.state == State.WHITE_PIECE) {
                     if ((origin.getRow() - destination.getRow() == 2) && Math.abs(origin.getColumn() - destination.getColumn()) == 2) {
                         canJumpTo = true;
@@ -79,34 +60,104 @@ public class Square extends JButton{
         return canJumpTo;
     }
 
-    private boolean isKingMoveLegal(Square origin, Square destination){
-        boolean kingMoveLegal = false;
+    private boolean canMove(Square destination){
+        boolean canMakeSingleMove = false;
+        Square origin = this;
 
-        // How is the King moving?
+        if (destination.state == State.EMPTY && destination.colour == Colour.WHITE) {
+            if (origin.state == State.WHITE_PIECE) {
+                if ((origin.getRow() - destination.getRow() == 1) && Math.abs(origin.getColumn() - destination.getColumn()) == 1) {
+                    canMakeSingleMove = true;
+                }
+            } else if (origin.state == State.BLACK_PIECE) {
+                if ((destination.getRow() - origin.getRow() == 1) && Math.abs(origin.getColumn() - destination.getColumn()) == 1) {
+                    canMakeSingleMove = true;
+                }
+            }
+        }
+        return canMakeSingleMove;
+    }
 
+    private boolean canMakeSingleMoveKing(Square destination){
+        boolean canMakeSingleMoveKing = false;
+        Square origin = this;
 
+        if (destination.state == State.EMPTY && destination.colour == Colour.WHITE) {
+            if (Math.abs(origin.getRow() - destination.getRow()) == 1 && Math.abs(origin.getColumn() - destination.getColumn()) == 1) {
+                canMakeSingleMoveKing = true;
+            }
+        }
+        return canMakeSingleMoveKing;
+    }
 
+    boolean canJumpToKing(Square destination){
+        boolean canJumpTo = false;
+        Square middleSquare;
+        Square origin = this;
 
+        try {
+            middleSquare = Board.getMiddleSquare(this, destination);
+        } catch (Exception e) {
+            return false;
+        }
 
+        if (destination.state == State.EMPTY && destination.colour == Colour.WHITE) {
+            if (middleIsOpposite(origin.state, middleSquare.state) && !(middleSquare.state == State.EMPTY)) {
+                if (Math.abs(origin.getRow() - destination.getRow()) == 2 && Math.abs(origin.getColumn() - destination.getColumn()) == 2) {
+                    canJumpTo = true;
+                }
+            }
+        }
 
+        return canJumpTo;
+    }
 
+    private boolean middleIsOpposite(State origin, State middle){
+        boolean middleIsOpposite;
 
+        String[] originStateParts = origin.toString().split("_");
+        String[] middleStateParts = middle.toString().split("_");
 
+        middleIsOpposite = !(originStateParts[0].equals(middleStateParts[0]));
 
-        return kingMoveLegal;
+        return middleIsOpposite;
+    }
+
+    private void playJumpSound(){
+        try {
+            Clip clip = AudioSystem.getClip();
+            clip.open(AudioSystem.getAudioInputStream(new File("assets/sounds/jump.wav")));
+            clip.start();
+        } catch (Exception exc) {
+            exc.printStackTrace(System.out);
+        }
+    }
+
+    private void playMoveSound(){
+        try {
+            Clip clip = AudioSystem.getClip();
+            clip.open(AudioSystem.getAudioInputStream(new File("assets/sounds/movePiece.wav")));
+            clip.start();
+        } catch (Exception exc) {
+            exc.printStackTrace(System.out);
+        }
     }
 
     void moveTo(Square destination){
         Square middleSquare = null;
 
-        if (this.state == State.BLACK_PIECE){
+        if (this.state == State.BLACK_PIECE) {
             destination.state = State.BLACK_PIECE;
-        } else if (this.state == State.WHITE_PIECE){
+        } else if (this.state == State.WHITE_PIECE) {
             destination.state = State.WHITE_PIECE;
+        } else if (this.state == State.BLACK_KING){
+            destination.state = State.BLACK_KING;
+        } else if (this.state == State.WHITE_KING){
+            destination.state = State.WHITE_KING;
         }
         this.state = State.EMPTY;
 
-        if (Math.abs(this.getColumn() - destination.getColumn()) == 2){
+        if (Math.abs(this.getColumn() - destination.getColumn()) == 2) {
             middleSquare = Board.getMiddleSquare(this, destination);
             middleSquare.state = State.EMPTY;
             middleSquare.setIcon(Board.whiteSquareIcon);
@@ -115,32 +166,6 @@ public class Square extends JButton{
         } else {
             Board.jumpPerformed = false;
             playMoveSound();
-        }
-    }
-
-    private void playJumpSound(){
-        try
-        {
-            Clip clip = AudioSystem.getClip();
-            clip.open(AudioSystem.getAudioInputStream(new File("assets/sounds/jump.wav")));
-            clip.start();
-        }
-        catch (Exception exc)
-        {
-            exc.printStackTrace(System.out);
-        }
-    }
-
-    private void playMoveSound(){
-        try
-        {
-            Clip clip = AudioSystem.getClip();
-            clip.open(AudioSystem.getAudioInputStream(new File("assets/sounds/movePiece.wav")));
-            clip.start();
-        }
-        catch (Exception exc)
-        {
-            exc.printStackTrace(System.out);
         }
     }
 
@@ -156,12 +181,12 @@ public class Square extends JButton{
         return state;
     }
 
-    Colour getColour(){
-        return colour;
-    }
-
     public void setState(State state){
         this.state = state;
+    }
+
+    Colour getColour(){
+        return colour;
     }
 
     void setColour(Colour colour){
