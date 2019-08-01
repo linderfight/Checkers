@@ -60,6 +60,28 @@ public class Square extends JButton{
         return canJumpTo;
     }
 
+    boolean canJumpToKing(Square destination){
+        boolean canJumpTo = false;
+        Square middleSquare;
+        Square origin = this;
+
+        try {
+            middleSquare = Board.getMiddleSquare(this, destination);
+        } catch (Exception e) {
+            return false;
+        }
+
+        if (destination.state == State.EMPTY && destination.colour == Colour.WHITE) {
+            if (middleIsOpposite(origin.state, middleSquare.state) && !(middleSquare.state == State.EMPTY)) {
+                if (Math.abs(origin.getRow() - destination.getRow()) == 2 && Math.abs(origin.getColumn() - destination.getColumn()) == 2) {
+                    canJumpTo = true;
+                }
+            }
+        }
+
+        return canJumpTo;
+    }
+
     private boolean canMove(Square destination){
         boolean canMakeSingleMove = false;
         Square origin = this;
@@ -88,28 +110,6 @@ public class Square extends JButton{
             }
         }
         return canMakeSingleMoveKing;
-    }
-
-    boolean canJumpToKing(Square destination){
-        boolean canJumpTo = false;
-        Square middleSquare;
-        Square origin = this;
-
-        try {
-            middleSquare = Board.getMiddleSquare(this, destination);
-        } catch (Exception e) {
-            return false;
-        }
-
-        if (destination.state == State.EMPTY && destination.colour == Colour.WHITE) {
-            if (middleIsOpposite(origin.state, middleSquare.state) && !(middleSquare.state == State.EMPTY)) {
-                if (Math.abs(origin.getRow() - destination.getRow()) == 2 && Math.abs(origin.getColumn() - destination.getColumn()) == 2) {
-                    canJumpTo = true;
-                }
-            }
-        }
-
-        return canJumpTo;
     }
 
     private boolean middleIsOpposite(State origin, State middle){

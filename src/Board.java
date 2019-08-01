@@ -30,11 +30,17 @@ class Board implements ActionListener{
     static Boolean jumpPerformed;
 
     Board(){
-        currentTurn = State.WHITE_PIECE;
-        jumpPerformed = false;
-        setIcons();
-        buildBoard();
-        showMovablePieces();
+        generateNewBoard();
+    }
+
+    static Square getMiddleSquare(Square origin, Square destination){
+        Square middleSquare = null;
+        int middleSquareRow = (origin.getRow() + destination.getRow()) / 2;
+        int middleSquareColumn = (origin.getColumn() + destination.getColumn()) / 2;
+
+        middleSquare = getSquare(middleSquareColumn, middleSquareRow);
+
+        return middleSquare;
     }
 
     public void actionPerformed(ActionEvent e){
@@ -44,42 +50,7 @@ class Board implements ActionListener{
         if (buttonPair.size() == 1) {
             resolvePieceSelection();
         } else if (buttonPair.size() == 2) {
-            movePiece();
-        }
-    }
-
-    private void resolvePieceSelection(){
-        Boolean canJump = false;
-        if (correctPieceSelected(buttonPair.get(0).state, currentTurn)) {
-            buttonPair.get(0).active = true;
-            for (Square square : boardSquares) {
-                if (buttonPair.get(0).state == State.BLACK_KING || buttonPair.get(0).state == State.WHITE_KING){
-                    if (buttonPair.get(0).canJumpToKing(square)) {
-                        square.colour = Colour.YELLOW;
-                        canJump = true;
-                    }
-                } else {
-                    if (buttonPair.get(0).canJumpTo(square)) {
-                        square.colour = Colour.YELLOW;
-                        canJump = true;
-                    }
-                }
-
-            }
-
-            if (canJump == false){
-                for (Square square : boardSquares) {
-                    if (buttonPair.get(0).canMoveTo(square)) {
-                        square.colour = Colour.YELLOW;
-                    }
-                }
-            }
-
-            updateBoard();
-        } else {
-            buttonPair.clear();
-            playInvalidMoveSound();
-            clearMoveToSquares();
+            resolveSecondPieceSelection();
         }
     }
 
@@ -109,16 +80,6 @@ class Board implements ActionListener{
         jumpSquare = getSquare(jumpSquareColumn, jumpSquareRow);
 
         return jumpSquare;
-    }
-
-    static Square getMiddleSquare(Square origin, Square destination){
-        Square middleSquare = null;
-        int middleSquareRow = (origin.getRow() + destination.getRow()) / 2;
-        int middleSquareColumn = (origin.getColumn() + destination.getColumn()) / 2;
-
-        middleSquare = getSquare(middleSquareColumn, middleSquareRow);
-
-        return middleSquare;
     }
 
     private static Square getSquare(int column, int row){
@@ -185,7 +146,75 @@ class Board implements ActionListener{
         return isMovable;
     }
 
-    private void movePiece(){
+    private boolean movablePiecesExist(Colour pieceColour){
+        boolean movablePiecesExist = false;
+
+        if (pieceColour == Colour.WHITE){
+            for (Square square : boardSquares) {
+                if ((square.state == State.WHITE_PIECE || square.state == State.WHITE_KING) && isMovable(square)){
+                    movablePiecesExist = true;
+                    break;
+                }
+            }
+        } else if (pieceColour == Colour.BLACK){
+            for (Square square : boardSquares) {
+                if ((square.state == State.BLACK_PIECE || square.state == State.BLACK_KING) && isMovable(square)){
+                    movablePiecesExist = true;
+                    break;
+                }
+            }
+        }
+
+
+        return movablePiecesExist;
+    }
+
+    private void generateNewBoard(){
+        currentTurn = State.WHITE_PIECE;
+        jumpPerformed = false;
+        buttonPair.clear();
+        boardSquares.clear();
+        setIcons();
+        buildBoard();
+        showMovablePieces();
+    }
+
+    private void resolvePieceSelection(){
+        Boolean canJump = false;
+        if (correctPieceSelected(buttonPair.get(0).state, currentTurn)) {
+            buttonPair.get(0).active = true;
+            for (Square square : boardSquares) {
+                if (buttonPair.get(0).state == State.BLACK_KING || buttonPair.get(0).state == State.WHITE_KING){
+                    if (buttonPair.get(0).canJumpToKing(square)) {
+                        square.colour = Colour.YELLOW;
+                        canJump = true;
+                    }
+                } else {
+                    if (buttonPair.get(0).canJumpTo(square)) {
+                        square.colour = Colour.YELLOW;
+                        canJump = true;
+                    }
+                }
+
+            }
+
+            if (canJump == false){
+                for (Square square : boardSquares) {
+                    if (buttonPair.get(0).canMoveTo(square)) {
+                        square.colour = Colour.YELLOW;
+                    }
+                }
+            }
+
+            updateBoard();
+        } else {
+            buttonPair.clear();
+            playInvalidMoveSound();
+            clearMoveToSquares();
+        }
+    }
+
+    private void resolveSecondPieceSelection(){
         if (buttonPair.get(1).colour == Colour.YELLOW) {
             buttonPair.get(0).active = false;
             buttonPair.get(0).moveTo(buttonPair.get(1));
@@ -201,7 +230,7 @@ class Board implements ActionListener{
                 showMovablePieces();
             }
 
-            checkGameOver();
+            checkIfGameOver();
 
         } else {
             buttonPair.get(1).active = true;
@@ -210,25 +239,37 @@ class Board implements ActionListener{
         }
     }
 
-    private void checkGameOver(){
+    private void checkIfGameOver(){
+
+        boolean gameOver = false;
 
         int blackSquareCount = 0;
         int whiteSquareCount = 0;
 
-        for (Square square: boardSquares){
-            if (square.state == State.WHITE_KING || square.state == State.WHITE_PIECE){
+        for (Square square : boardSquares) {
+            if (square.state == State.WHITE_KING || square.state == State.WHITE_PIECE) {
                 whiteSquareCount++;
-            } else if (square.state == State.BLACK_KING || square.state == State.BLACK_PIECE){
+            } else if (square.state == State.BLACK_KING || square.state == State.BLACK_PIECE) {
                 blackSquareCount++;
             }
         }
 
-        if (whiteSquareCount == 0){
-            System.out.println("Black pieces win!");
-        } else if (blackSquareCount == 0){
-            System.out.println("White pieces win!");
+        if (((!movablePiecesExist(Colour.WHITE)) && (movablePiecesExist(Colour.BLACK))) || (whiteSquareCount == 0)){ //no white
+            JOptionPane.showMessageDialog(null, "The player with Black pieces wins!!!");
+            gameOver = true;
+        } else if (((!movablePiecesExist(Colour.BLACK)) && (movablePiecesExist(Colour.WHITE))) || (blackSquareCount == 0)) {
+            JOptionPane.showMessageDialog(null, "The player with White pieces wins!!!");
+            gameOver = true;
+        } else if ((!movablePiecesExist(Colour.BLACK)) && (!movablePiecesExist(Colour.WHITE))) {
+            JOptionPane.showMessageDialog(null, "Its a Draw");
+            gameOver = true;
         }
 
+        if (gameOver) {
+            frame.setVisible(false);
+            frame.dispose();
+            generateNewBoard();
+        }
     }
 
     private void resolveDoubleJump(){
@@ -253,7 +294,7 @@ class Board implements ActionListener{
         }
     }
 
-    private void showMovablePieces(){
+     private void showMovablePieces(){
 
         boolean jumpPresent = false;
 
