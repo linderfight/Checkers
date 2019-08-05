@@ -126,7 +126,7 @@ public class Square extends JButton{
     private void playJumpSound(){
         try {
             Clip clip = AudioSystem.getClip();
-            clip.open(AudioSystem.getAudioInputStream(new File("assets/sounds/jump.wav")));
+            clip.open(AudioSystem.getAudioInputStream(ClassLoader.getSystemResource("jump.wav")));
             clip.start();
         } catch (Exception exc) {
             exc.printStackTrace(System.out);
@@ -136,7 +136,7 @@ public class Square extends JButton{
     private void playMoveSound(){
         try {
             Clip clip = AudioSystem.getClip();
-            clip.open(AudioSystem.getAudioInputStream(new File("assets/sounds/movePiece.wav")));
+            clip.open(AudioSystem.getAudioInputStream(ClassLoader.getSystemResource("movePiece.wav")));
             clip.start();
         } catch (Exception exc) {
             exc.printStackTrace(System.out);

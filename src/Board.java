@@ -180,8 +180,9 @@ class Board implements ActionListener{
     }
 
     private void resolvePieceSelection(){
+        System.out.println(buttonPair.get(0).toString());
         Boolean canJump = false;
-        if (correctPieceSelected(buttonPair.get(0).state, currentTurn)) {
+        if (correctPieceSelected(buttonPair.get(0).state, currentTurn) && isMovable(buttonPair.get(0))) {
             buttonPair.get(0).active = true;
             for (Square square : boardSquares) {
                 if (buttonPair.get(0).state == State.BLACK_KING || buttonPair.get(0).state == State.WHITE_KING){
@@ -215,6 +216,10 @@ class Board implements ActionListener{
     }
 
     private void resolveSecondPieceSelection(){
+
+        System.out.println(buttonPair.get(1).toString());
+        System.out.println("-----------------------------");
+
         if (buttonPair.get(1).colour == Colour.YELLOW) {
             buttonPair.get(0).active = false;
             buttonPair.get(0).moveTo(buttonPair.get(1));
@@ -294,7 +299,7 @@ class Board implements ActionListener{
         }
     }
 
-     private void showMovablePieces(){
+    private void showMovablePieces(){
 
         boolean jumpPresent = false;
 
@@ -401,7 +406,7 @@ class Board implements ActionListener{
     private void playInvalidMoveSound(){
         try {
             Clip clip = AudioSystem.getClip();
-            clip.open(AudioSystem.getAudioInputStream(new File("assets/sounds/invalidMove.wav")));
+            clip.open(AudioSystem.getAudioInputStream(ClassLoader.getSystemResource("invalidMove.wav")));
             clip.start();
         } catch (Exception exc) {
             exc.printStackTrace(System.out);
@@ -417,24 +422,24 @@ class Board implements ActionListener{
     }
 
     private void setIcons(){
-        blackSquareIcon = new ImageIcon("assets/pieces/blackSquare.png");
-        whiteSquareIcon = new ImageIcon("assets/pieces/whiteSquare.png");
-        yellowSquareIcon = new ImageIcon("assets/pieces/canMoveTo.png");
+        blackSquareIcon = new ImageIcon(ClassLoader.getSystemResource("blackSquare.png"));
+        whiteSquareIcon = new ImageIcon(ClassLoader.getSystemResource("whiteSquare.png"));
+        yellowSquareIcon = new ImageIcon(ClassLoader.getSystemResource("canMoveTo.png"));
 
-        whitePieceIcon = new ImageIcon("assets/pieces/white.png");
-        whiteKingIcon = new ImageIcon("assets/pieces/whiteKing.png");
-        blackPieceIcon = new ImageIcon("assets/pieces/black.png");
-        blackKingIcon = new ImageIcon("assets/pieces/blackKing.png");
+        whitePieceIcon = new ImageIcon(ClassLoader.getSystemResource("white.png"));
+        whiteKingIcon = new ImageIcon(ClassLoader.getSystemResource("whiteKing.png"));
+        blackPieceIcon = new ImageIcon(ClassLoader.getSystemResource("black.png"));
+        blackKingIcon = new ImageIcon(ClassLoader.getSystemResource("blackKing.png"));
 
-        whitePieceMovableIcon = new ImageIcon("assets/pieces/whiteActive.png");
-        whiteKingMovableIcon = new ImageIcon("assets/pieces/whiteKingActive.png");
-        blackPieceMovableIcon = new ImageIcon("assets/pieces/blackActive.png");
-        blackKingMovableIcon = new ImageIcon("assets/pieces/blackKingActive.png");
+        whitePieceMovableIcon = new ImageIcon(ClassLoader.getSystemResource("whiteActive.png"));
+        whiteKingMovableIcon = new ImageIcon(ClassLoader.getSystemResource("whiteKingActive.png"));
+        blackPieceMovableIcon = new ImageIcon(ClassLoader.getSystemResource("blackActive.png"));
+        blackKingMovableIcon = new ImageIcon(ClassLoader.getSystemResource("blackKingActive.png"));
     }
 
     private void buildBoard(){
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
-        frame = new JFrame("Checkers");
+        frame = new JFrame("Momchil's checkers - v1.0");
         frame.setSize(612, 612);
         frame.setResizable(false);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
