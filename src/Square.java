@@ -1,7 +1,6 @@
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.Clip;
 import javax.swing.*;
-import java.io.File;
 
 public class Square extends JButton{
 
@@ -18,16 +17,16 @@ public class Square extends JButton{
         active = false;
     }
 
-    boolean canMoveTo(Square destination){
+    boolean canMoveTo(Square destination)   {
         Square origin = this;
-        boolean canMoveTo = false;
-        if (!(destination == null)) {
-            if (origin.state == State.WHITE_KING || origin.state == State.BLACK_KING) {
-                canMoveTo = this.canMakeSingleMoveKing(destination);
-            } else {
-                canMoveTo = this.canMove(destination);
-            }
+        boolean canMoveTo;
+
+        if (origin.state == State.WHITE_KING || origin.state == State.BLACK_KING) {
+            canMoveTo = this.canMoveKing(destination);
+        } else {
+            canMoveTo = this.canMove(destination);
         }
+
         return canMoveTo;
     }
 
@@ -100,7 +99,7 @@ public class Square extends JButton{
         return canMakeSingleMove;
     }
 
-    private boolean canMakeSingleMoveKing(Square destination){
+    private boolean canMoveKing(Square destination){
         boolean canMakeSingleMoveKing = false;
         Square origin = this;
 
