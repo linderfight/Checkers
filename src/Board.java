@@ -71,12 +71,9 @@ class Board implements ActionListener{
 
     private void resolveSelectedPiece(){
 
-        System.out.println("Can move: " + isMovable(buttonPair.get(0)));
-
-
         Boolean canJump = false;
         if (correctPieceSelected(buttonPair.get(0).state)) {
-            buttonPair.get(0).active = true;h
+            buttonPair.get(0).active = true;
             for (Square square : boardSquares) {
                 if (buttonPair.get(0).state == State.BLACK_KING || buttonPair.get(0).state == State.WHITE_KING){
                     if (buttonPair.get(0).canJumpToKing(square)) {
@@ -106,8 +103,6 @@ class Board implements ActionListener{
             playInvalidMoveSound();
             clearMoveToSquares();
         }
-
-        System.out.println("---------------------------------------------");
 
     }
 
