@@ -69,15 +69,15 @@ class Board implements ActionListener{
     private void resolveDoubleJump(){
 
         if (clickedSquare.state == State.WHITE_KING || clickedSquare.state == State.BLACK_KING){
-            resloveDoubleJumpKing();
+            resolveDoubleJumpKing();
         } else {
-            resloveDoubleJumpRegular();
+            resolveDoubleJumpRegular();
         }
 
         clickedSquare = null;
     }
 
-    private void resloveDoubleJumpKing(){
+    private void resolveDoubleJumpKing(){
 
         Square leftUp = getJumpDestination(clickedSquare, "leftUp");
         Square leftDown = getJumpDestination(clickedSquare, "leftDown");
@@ -111,7 +111,7 @@ class Board implements ActionListener{
         }
     }
 
-    private void resloveDoubleJumpRegular(){
+    private void resolveDoubleJumpRegular(){
         Square left = getJumpDestination(clickedSquare, "left");
         Square right = getJumpDestination(clickedSquare, "right");
 
@@ -149,8 +149,7 @@ class Board implements ActionListener{
 
     private boolean isPieceSelected(){
         for (Square square : boardSquares) {
-            if (square.active == true){
-                System.out.println(square.toString());
+            if (square.active){
                 return true;
             }
 
@@ -408,13 +407,13 @@ class Board implements ActionListener{
         for (Square square : boardSquares) {
             if (square.state == State.WHITE_KING || square.state == State.WHITE_PIECE) {
                 whitePiecesCount++;
-                if(square.getIcon() == whiteKingMovableIcon || square.getIcon() == whitePieceMovableIcon){
+                if(isMovable(square)){
                     whiteCantMove = false;
                 }
             } else if (square.state == State.BLACK_KING || square.state == State.BLACK_PIECE) {
                 blackPiecesCount++;
-                if(square.getIcon() == blackKingMovableIcon || square.getIcon() == blackPieceMovableIcon){
-                    blackCantMove = false;
+                if(isMovable(square)){
+                    blackCantMove= false;
                 }
             }
         }
@@ -491,7 +490,7 @@ class Board implements ActionListener{
 
     private void buildBoard(){
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
-        frame = new JFrame("Momchil's checkers - v1.0");
+        frame = new JFrame("Checkers - v1.0");
         frame.setSize(612, 612);
         frame.setResizable(false);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
