@@ -154,6 +154,8 @@ public class Square extends JButton{
         } else if (this.state == State.WHITE_KING){
             destination.state = State.WHITE_KING;
         }
+
+        destination.active = false;
         this.state = State.EMPTY;
 
         if (Math.abs(this.getColumn() - destination.getColumn()) == 2) {

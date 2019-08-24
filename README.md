@@ -1,1 +1,2 @@
-2. Debug multiple active at the same time
+1. King can't double jump
+2. Determine winner

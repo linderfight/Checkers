@@ -8,12 +8,12 @@ import java.io.File;
 import java.sql.SQLClientInfoException;
 import java.util.ArrayList;
 
+import static javax.swing.JOptionPane.showMessageDialog;
+
 class Board implements ActionListener{
 
     private static ArrayList<Square> boardSquares = new ArrayList<Square>();
     private static ImageIcon blackSquareIcon;
-
-    private ArrayList<Square> buttonPair = new ArrayList<Square>();
     private State currentTurn;
     private ImageIcon whitePieceIcon;
     private ImageIcon whiteKingIcon;
@@ -25,32 +25,120 @@ class Board implements ActionListener{
     private ImageIcon blackKingMovableIcon;
     private ImageIcon yellowSquareIcon;
     private JFrame frame;
-
     static ImageIcon whiteSquareIcon;
     static Boolean jumpPerformed;
+    Square clickedSquare;
+    Square selectedPiece;
+
 
     Board(){
         generateNewBoard();
     }
 
     public void actionPerformed(ActionEvent e){
-        Square clickedSquare = ((Square) e.getSource());
-        buttonPair.add(clickedSquare);
+        clickedSquare = ((Square) e.getSource());
+        if (correctPieceSelected()){
+            selectedPiece = clickedSquare;
+            clickedSquare = null;
+            showPossibleMoves();
+        } else if (clickedSquare.colour == Colour.YELLOW && clickedSquare.state == State.EMPTY) {
+            makeAMove();
+        } else {
+            playInvalidMoveSound();
+        }
 
-        if (buttonPair.size() == 1) {
-            resolveSelectedPiece();
-        } else if (buttonPair.size() == 2) {
-            resolveDestination();
+
+    }
+
+    private void makeAMove(){
+        selectedPiece.moveTo(clickedSquare);
+        clearPossibleMoves();
+        selectedPiece.setIcon(whiteSquareIcon);
+        selectedPiece.active = false;
+        updateBoard();
+
+        if (jumpPerformed) {
+            resolveDoubleJump();
+        } else {
+            changePlayerTurn();
+            showMovablePieces();
+        }
+        checkIfGameOver();
+    }
+
+    private void resolveDoubleJump(){
+
+        if (clickedSquare.state == State.WHITE_KING || clickedSquare.state == State.BLACK_KING){
+            resloveDoubleJumpKing();
+        } else {
+            resloveDoubleJumpRegular();
+        }
+
+        clickedSquare = null;
+    }
+
+    private void resloveDoubleJumpKing(){
+
+        Square leftUp = getJumpDestination(clickedSquare, "leftUp");
+        Square leftDown = getJumpDestination(clickedSquare, "leftDown");
+        Square rightUp = getJumpDestination(clickedSquare, "rightUp");
+        Square rightDown = getJumpDestination(clickedSquare, "rightDown");
+
+        if (clickedSquare.canJumpToKing(leftUp)) {
+            leftUp.colour = Colour.YELLOW;
+            selectedPiece = clickedSquare;
+            selectedPiece.active = true;
+            updateBoard();
+        } else if (clickedSquare.canJumpToKing(leftDown)){
+            leftDown.colour = Colour.YELLOW;
+            selectedPiece = clickedSquare;
+            selectedPiece.active = true;
+            updateBoard();
+        } else if (clickedSquare.canJumpToKing(rightUp)){
+            rightUp.colour = Colour.YELLOW;
+            selectedPiece = clickedSquare;
+            selectedPiece.active = true;
+            updateBoard();
+        } else if (clickedSquare.canJumpToKing(rightDown)){
+            rightDown.colour = Colour.YELLOW;
+            selectedPiece = clickedSquare;
+            selectedPiece.active = true;
+            updateBoard();
+        } else {
+            selectedPiece = null;
+            changePlayerTurn();
+            showMovablePieces();
         }
     }
 
-    private boolean correctPieceSelected(State squareState){
+    private void resloveDoubleJumpRegular(){
+        Square left = getJumpDestination(clickedSquare, "left");
+        Square right = getJumpDestination(clickedSquare, "right");
+
+        if (clickedSquare.canJumpTo(left) || clickedSquare.canJumpTo(right)) {
+            if (clickedSquare.canJumpTo(left)) {
+                left.colour = Colour.YELLOW;
+            }
+            if (clickedSquare.canJumpTo(right)) {
+                right.colour = Colour.YELLOW;
+            }
+            selectedPiece = clickedSquare;
+            selectedPiece.active = true;
+            updateBoard();
+        } else {
+            selectedPiece = null;
+            changePlayerTurn();
+            showMovablePieces();
+        }
+    }
+
+    private boolean correctPieceSelected(){
         boolean correctPieceSelected = false;
 
-        String[] pieceStateParts = squareState.toString().split("_");
+        String[] pieceStateParts = clickedSquare.state.toString().split("_");
         String[] currentTurnParts = currentTurn.toString().split("_");
 
-        if (pieceStateParts[0].equals(currentTurnParts[0])){
+        if ((pieceStateParts[0].equals(currentTurnParts[0]) && !(isPieceSelected())) && (isMovable(clickedSquare) || canJump(clickedSquare))){
             correctPieceSelected = true;
         } else {
             correctPieceSelected = false;
@@ -59,99 +147,53 @@ class Board implements ActionListener{
         return correctPieceSelected;
     }
 
+    private boolean isPieceSelected(){
+        for (Square square : boardSquares) {
+            if (square.active == true){
+                System.out.println(square.toString());
+                return true;
+            }
+
+        }
+        return false;
+
+    }
+
     private void generateNewBoard(){
         currentTurn = State.WHITE_PIECE;
         jumpPerformed = false;
-        buttonPair.clear();
         boardSquares.clear();
         setIcons();
         buildBoard();
         showMovablePieces();
     }
 
-    private void resolveSelectedPiece(){
-
+    private void showPossibleMoves(){
         Boolean canJump = false;
-        if (correctPieceSelected(buttonPair.get(0).state)) {
-            buttonPair.get(0).active = true;
-            for (Square square : boardSquares) {
-                if (buttonPair.get(0).state == State.BLACK_KING || buttonPair.get(0).state == State.WHITE_KING){
-                    if (buttonPair.get(0).canJumpToKing(square)) {
-                        square.colour = Colour.YELLOW;
-                        canJump = true;
-                    }
-                } else {
-                    if (buttonPair.get(0).canJumpTo(square)) {
-                        square.colour = Colour.YELLOW;
-                        canJump = true;
-                    }
+
+        selectedPiece.active = true;
+        for (Square square : boardSquares) {
+            if (selectedPiece.state == State.BLACK_KING || selectedPiece.state == State.WHITE_KING) {
+                if (selectedPiece.canJumpToKing(square)) {
+                    square.colour = Colour.YELLOW;
+                    canJump = true;
                 }
-
-            }
-
-            if (canJump == false){
-                for (Square square : boardSquares) {
-                    if (buttonPair.get(0).canMoveTo(square)) {
-                        square.colour = Colour.YELLOW;
-                    }
-                }
-            }
-
-            updateBoard();
-        } else {
-            buttonPair.clear();
-            playInvalidMoveSound();
-            clearMoveToSquares();
-        }
-
-    }
-
-    private void resolveDestination (){
-
-        if (buttonPair.get(1).colour == Colour.YELLOW) {
-            buttonPair.get(0).active = false;
-            buttonPair.get(0).moveTo(buttonPair.get(1));
-            buttonPair.get(0).setIcon(whiteSquareIcon);
-            clearMoveToSquares();
-            updateBoard();
-
-            if (jumpPerformed) {
-                resolveDoubleJump();
             } else {
-                changePlayerTurn();
-                buttonPair.clear();
-                showMovablePieces();
+                if (selectedPiece.canJumpTo(square)) {
+                    square.colour = Colour.YELLOW;
+                    canJump = true;
+                }
             }
-
-            checkIfGameOver();
-
-        } else {
-            buttonPair.get(1).active = true;
-            buttonPair.remove(buttonPair.size() - 1);
-            playInvalidMoveSound();
         }
-    }
 
-    private void resolveDoubleJump(){
-        Square left = getJumpDestination(buttonPair.get(1), "left");
-        Square right = getJumpDestination(buttonPair.get(1), "right");
-
-        if (buttonPair.get(1).canJumpTo(left) || buttonPair.get(1).canJumpTo(right)) {
-            if (buttonPair.get(1).canJumpTo(left)) {
-                left.colour = Colour.YELLOW;
+        if (canJump == false) {
+            for (Square square : boardSquares) {
+                if (selectedPiece.canMoveTo(square)) {
+                    square.colour = Colour.YELLOW;
+                }
             }
-            if (buttonPair.get(1).canJumpTo(right)) {
-                right.colour = Colour.YELLOW;
-            }
-            buttonPair.get(1).active = true;
-            buttonPair.set(0, buttonPair.get(1));
-            buttonPair.remove(buttonPair.size() - 1);
-            updateBoard();
-        } else {
-            changePlayerTurn();
-            showMovablePieces();
-            buttonPair.clear();
         }
+        updateBoard();
     }
 
     private Square getJumpDestination(Square origin, String direction){
@@ -175,6 +217,18 @@ class Board implements ActionListener{
                 jumpSquareColumn = origin.getColumn() + 2;
                 jumpSquareRow = origin.getRow() + 2;
             }
+        } else if (direction == "leftUp") {
+            jumpSquareColumn = origin.getColumn() - 2;
+            jumpSquareRow = origin.getRow() - 2;
+        }else if (direction == "leftDown") {
+            jumpSquareColumn = origin.getColumn() - 2;
+            jumpSquareRow = origin.getRow() + 2;
+        }else if (direction == "rightUp") {
+            jumpSquareColumn = origin.getColumn() + 2;
+            jumpSquareRow = origin.getRow() - 2;
+        }else if (direction == "rightDown") {
+            jumpSquareColumn = origin.getColumn() + 2;
+            jumpSquareRow = origin.getRow() + 2;
         }
 
         jumpSquare = getSquare(jumpSquareColumn, jumpSquareRow);
@@ -211,9 +265,16 @@ class Board implements ActionListener{
         boolean canJump = false;
 
         for (Square destinationSquare : boardSquares) {
-            if (currentSquare.canJumpTo(destinationSquare)) {
-                canJump = true;
-                break;
+            if (currentSquare.state == State.WHITE_KING || currentSquare.state == State.BLACK_KING) {
+                if (currentSquare.canJumpToKing(destinationSquare)) {
+                    canJump = true;
+                    break;
+                }
+            } else {
+                if (currentSquare.canJumpTo(destinationSquare)) {
+                    canJump = true;
+                    break;
+                }
             }
         }
 
@@ -339,15 +400,43 @@ class Board implements ActionListener{
     private void checkIfGameOver(){
 
         boolean gameOver = false;
-
-        int blackSquareCount = 0;
-        int whiteSquareCount = 0;
+        boolean whiteCantMove = true;
+        boolean blackCantMove = true;
+        int blackPiecesCount = 0;
+        int whitePiecesCount = 0;
 
         for (Square square : boardSquares) {
             if (square.state == State.WHITE_KING || square.state == State.WHITE_PIECE) {
-                whiteSquareCount++;
+                whitePiecesCount++;
+                if(square.getIcon() == whiteKingMovableIcon || square.getIcon() == whitePieceMovableIcon){
+                    whiteCantMove = false;
+                }
             } else if (square.state == State.BLACK_KING || square.state == State.BLACK_PIECE) {
-                blackSquareCount++;
+                blackPiecesCount++;
+                if(square.getIcon() == blackKingMovableIcon || square.getIcon() == blackPieceMovableIcon){
+                    blackCantMove = false;
+                }
+            }
+        }
+
+        if (blackPiecesCount == 0 || whitePiecesCount == 0){
+            gameOver = true;
+            if (blackPiecesCount == 0 && whitePiecesCount > 0){
+                showMessageDialog(null, "The player with WHITE pieces wins. Congratulations!");
+            } else if (whitePiecesCount == 0 && blackPiecesCount > 0){
+                showMessageDialog(null, "The player with BLACK pieces wins. Congratulations!");
+            }
+        } else if (whiteCantMove || blackCantMove) {
+            if (whiteCantMove && blackCantMove) {
+                if (whitePiecesCount > blackPiecesCount) {
+                    showMessageDialog(null, "The player with WHITE pieces wins. Congratulations!");
+                } else if (blackPiecesCount > whitePiecesCount) {
+                    showMessageDialog(null, "The player with BLACK pieces wins. Congratulations!");
+                }
+            } else if (whiteCantMove) {
+                showMessageDialog(null, "The player with BLACK pieces wins. Congratulations!");
+            } else if (blackCantMove) {
+                showMessageDialog(null, "The player with WHITE pieces wins. Congratulations!");
             }
         }
 
@@ -358,7 +447,7 @@ class Board implements ActionListener{
         }
     }
 
-    private void clearMoveToSquares(){
+    private void clearPossibleMoves(){
         for (Square square : boardSquares) {
             if (square.colour == Colour.YELLOW) {
                 square.colour = Colour.WHITE;
